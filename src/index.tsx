@@ -7,6 +7,7 @@ import { Components as  Component3d, Camera, Vector3 } from "outrun-renderer-3d"
 
 import * as PointerLockMiddleware from "outrun-middleware-pointerlock"
 
+import { FreeFlyingCamera } from "./FreeFlyingCamera"
 
 // TODO: This is awkward...
 const game = Game.start()
@@ -18,11 +19,11 @@ PointerLockMiddleware.activate(game)
 export const MyApp = () => {
     return <div>
         <Component3d.Renderer width={800} height={600}>
-            <Component3d.Camera position={Vector3.create(0, 10, 10)} lookAt={Vector3.create(0, 0, 0)} fov={70} aspectRatio={800/600} near={0.1} far={100}>
+            <FreeFlyingCamera initialPosition={Vector3.create(0, 10, 10)} game={game} aspectRatio={800/600}>
                 <Component3d.AmbientLight color={0xFFFFFF} />
                     <Component3d.Grid />
                     <Component3d.Box position={Vector3.create(0, 0, 0)} />
-            </Component3d.Camera>
+            </FreeFlyingCamera>
           </Component3d.Renderer>
         </div>
 }
