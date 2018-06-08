@@ -1,8 +1,31 @@
-// This file is required by the index.html file and will
-// be executed in the renderer process for that window.
-// All of the Node.js APIs are available in this process.
-
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 
-ReactDOM.render(<div>Hello</div>, document.getElementById("root"))
+import { Game } from "outrun-game-core"
+
+import { Components as  Component3d, Camera, Vector3 } from "outrun-renderer-3d"
+
+import * as PointerLockMiddleware from "outrun-middleware-pointerlock"
+
+
+// TODO: This is awkward...
+const game = Game.start()
+
+PointerLockMiddleware.activate(game)
+
+// Input manager - +/- commands
+
+export const MyApp = () => {
+    return <div>
+        <Component3d.Renderer width={800} height={600}>
+            <Component3d.Camera position={Vector3.create(0, 10, 10)} lookAt={Vector3.create(0, 0, 0)} fov={70} aspectRatio={800/600} near={0.1} far={100}>
+                <Component3d.AmbientLight color={0xFFFFFF} />
+                    <Component3d.Grid />
+                    <Component3d.Box position={Vector3.create(0, 0, 0)} />
+            </Component3d.Camera>
+          </Component3d.Renderer>
+        </div>
+}
+game.setView((renderContext) => <MyApp />)
+
+game.start()
