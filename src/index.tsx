@@ -87,7 +87,7 @@ let testCursorDir: Vector3 = Vector3.zero()
 
 const onRayChanged = (forwardDir: Vector3) => {
     console.dir(forwardDir)
-    testCursorDir = forwardDir: Vector3
+    testCursorDir = forwardDir
 }
 
 export const render = (rec: RenderEventContext) => {
@@ -108,7 +108,7 @@ export const render = (rec: RenderEventContext) => {
                 <Component3d.AmbientLight color={0xFFFFFF} />
                     <Component3d.Grid />
                     <Component3d.Box position={Vector3.create(0, 0, 0)} />
-                    <Component3d.Box position={Vector3.create(Math.floor(result.point.x + 0.5), Math.floor(result.point.y + 0.5), Math.floor(result.point.z + 0.5)} />
+                    <Component3d.Box position={Vector3.create(Math.floor(result.point.x + 0.5), Math.floor(result.point.y + 0.5), Math.floor(result.point.z + 0.5))} />
             </EditorCamera>
           </Component3d.Renderer>
 }

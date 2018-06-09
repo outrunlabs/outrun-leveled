@@ -87,7 +87,7 @@ export class FreeFlyingCamera extends React.PureComponent<FreeFlyingCameraProps,
                     this.props.game.dispatch({type: "FORWARD_SPEED", speed: 10})
                     break
                 case "s":
-                    this.props.game.dispatch({ type: "FORWARD_SPEED": speed: -10})
+                    this.props.game.dispatch({ type: "FORWARD_SPEED", speed: -10})
                     break
                 case "a":
                     this.props.game.dispatch({ type: "LATERAL_SPEED", speed: -10})
