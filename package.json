@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "build": "tsc && browserify lib/index.js -o dist/bundle.js",
     "watch:typescript": "tsc --watch",
     "watch:browserify": "watchify lib/index.js -o dist/bundle.js",
     "watch": "concurrently --kill-others \"npm run watch:typescript\" \"npm run watch:browserify\""
