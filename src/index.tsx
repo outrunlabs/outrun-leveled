@@ -6,6 +6,7 @@ import { PhysicsWorld } from "outrun-physics-3d"
 
 import { Components as  Component3d, Camera, Vector3, Mesh, ICamera, Vector2 } from "outrun-renderer-3d"
 
+import * as EditorMiddleware from "./middleware/EditorMiddleware"
 import * as PointerLockMiddleware from "outrun-middleware-pointerlock"
 import * as FreeFlyingCameraMiddleware from "./FreeFlyingCameraMiddleware"
 
@@ -13,6 +14,7 @@ import * as FreeFlyingCameraMiddleware from "./FreeFlyingCameraMiddleware"
 const game = Game.start()
 
 PointerLockMiddleware.activate(game)
+EditorMiddleware.activate(game)
 
 const ffm = FreeFlyingCameraMiddleware.activate(game)
 
@@ -70,7 +72,23 @@ export class EditorCamera extends React.Component<EditorCameraProps, {}> {
 
                 this.props.onRayChanged(dir)
             }
+
             
+            
+        })
+
+        window.addEventListener("mousedown", (evt: MouseEvent) => {
+            if (evt.which === 3) {
+                const world = game.getWorld()
+                const lastRay = testCursorDir
+
+                const cameraPos = ffm.getPosition(world)
+                const result = physics.rayCast(cameraPos, Vector3.multiplyScalar(testCursorDir, 200))
+                game.dispatch({
+                    type: "ADD_BOX",
+                    position: result.point,
+                })
+            }
         })
     }
 
@@ -102,15 +120,19 @@ export const render = (rec: RenderEventContext) => {
 
     const result = physics.rayCast(cameraPos, Vector3.multiplyScalar(testCursorDir, 200))
 
+    const editorState = EditorMiddleware.Selectors.getPrimitives(rec.nextWorld)
 
-    return <Component3d.Renderer width={800} height={600} >
+    return <div>
+        <Component3d.Renderer width={800} height={600} >
             <EditorCamera position={cameraPos} yaw={yaw} pitch={pitch} aspectRatio={800/600} onRayChanged={onRayChanged}>
                 <Component3d.AmbientLight color={0xFFFFFF} />
                     <Component3d.Grid />
                     <Component3d.Box position={Vector3.create(0, 0, 0)} />
                     <Component3d.Box position={Vector3.create(Math.floor(result.point.x + 0.5), Math.floor(result.point.y + 0.5), Math.floor(result.point.z + 0.5))} />
+               <EditorMiddleware.EditorView primitives={editorState} /> 
             </EditorCamera>
           </Component3d.Renderer>
+        </div>
 }
 game.setView((renderContext) => render(renderContext))
 
