@@ -5,20 +5,17 @@ import { Game, GameActions, GameModel, World } from "outrun-game-core"
 
 import { Components as  Component3d, Camera, Vector3 } from "outrun-renderer-3d"
 
+import * as PointerLockMiddleware from "outrun-middleware-pointerlock"
 // Input manager - +/- commands
-
-export interface FreeFlyingCameraProps {
-    initialPosition: Vector3
-    aspectRatio: number
-    game: Game
-}
-
 
 export interface State {
     position: Vector3
     velocity: Vector3
     lateralVelocity: Vector3
+    yaw: number
+    pitch: number
 }
+
 
 export type FreeFlyingCameraActions = {
     type: "FORWARD_SPEED",
@@ -28,17 +25,28 @@ export type FreeFlyingCameraActions = {
     speed: number,
 }
 
-export const reducer = (state: State, action: FreeFlyingCameraActions | GameActions ): State => {
+export const reducer = (state: State, action: FreeFlyingCameraActions | GameActions | PointerLockMiddleware.OutputActions): State => {
     switch (action.type) {
-        case "FORWARD_SPEED":
+        case PointerLockMiddleware.MouseMoveActionType:
             return {
                 ...state,
-                velocity: Vector3.multiplyScalar(Vector3.forward(), action.speed)
+                yaw: -action.deltaX + state.yaw,
+                pitch: action.deltaY + state.pitch,
+            }
+        case "FORWARD_SPEED":
+
+
+            const basis = Vector3.getBasisVectorsFromYawPitch(state.yaw, state.pitch)
+
+            return {
+                ...state,
+                velocity: Vector3.multiplyScalar(basis.forward, action.speed)
             }
         case "LATERAL_SPEED":
+            const basis2 = Vector3.getBasisVectorsFromYawPitch(state.yaw, state.pitch)
             return {
                 ...state,
-                lateralVelocity: Vector3.multiplyScalar(Vector3.right(), action.speed)
+                lateralVelocity: Vector3.multiplyScalar(basis2.right, -action.speed)
             }
 
         case "@@core/TICK":
@@ -56,27 +64,14 @@ export const reducer = (state: State, action: FreeFlyingCameraActions | GameActi
     }
 }
 
-export interface FreeFlyingCameraState {
-    model: GameModel<State, FreeFlyingCameraActions>
-}
+export const activate = (game: Game) => {
 
-
-export class FreeFlyingCamera extends React.PureComponent<FreeFlyingCameraProps, FreeFlyingCameraState> {
-
-    constructor(props: FreeFlyingCameraProps) {
-        super(props)
-
-        this.state = {
-            model: null,
-        }
-    }
-
-    public componentDidMount(): void {
-
-        const model =this.props.game.createModel<State, FreeFlyingCameraActions>("free-flying-camera", {
-            position: this.props.initialPosition,
+        const model =game.createModel<State, FreeFlyingCameraActions>("free-flying-camera", {
+            position: Vector3.create(0, 2, 2),
             velocity: Vector3.zero(),
             lateralVelocity: Vector3.zero(),
+            yaw: 0,
+            pitch: 0,
         }, reducer)
 
         window.addEventListener("keydown", (evt: KeyboardEvent) => {
@@ -84,51 +79,50 @@ export class FreeFlyingCamera extends React.PureComponent<FreeFlyingCameraProps,
             switch (evt.key) {
                 
                 case "w":
-                    this.props.game.dispatch({type: "FORWARD_SPEED", speed: 10})
+                    game.dispatch({type: "FORWARD_SPEED", speed: 10})
                     break
                 case "s":
-                    this.props.game.dispatch({ type: "FORWARD_SPEED": speed: -10})
+                    game.dispatch({ type: "FORWARD_SPEED", speed: -10})
                     break
                 case "a":
-                    this.props.game.dispatch({ type: "LATERAL_SPEED", speed: -10})
+                    game.dispatch({ type: "LATERAL_SPEED", speed: -10})
                     break
                 case "d":
-                    this.props.game.dispatch({ type: "LATERAL_SPEED", speed: 10})
+                    game.dispatch({ type: "LATERAL_SPEED", speed: 10})
                     break
 
             }
         })
 
         window.addEventListener("keyup", (evt: KeyboardEvent) => {
-
             switch (evt.key) {
                 case "w":
                 case "s":
-                    this.props.game.dispatch({ type: "FORWARD_SPEED", speed: 0 })
+                    game.dispatch({ type: "FORWARD_SPEED", speed: 0 })
                     break
                 case "a":
                 case "d":
-                    this.props.game.dispatch({ type: "LATERAL_SPEED", speed: 0})
+                    game.dispatch({ type: "LATERAL_SPEED", speed: 0})
                     break
             }
         })
         
-        this.setState({ model })
-    }
-
-    public render(): JSX.Element {
-        if (!this.state.model) {
-            return null
+        const getPosition = (world: World) => {
+            return model.selector(world).position
         }
 
-        const world = this.props.game.getWorld()
-        const position = this.state.model.selector(world).position
-
-        return <Camera position={position} lookAt={Vector3.zero()} fov={70} aspectRatio={this.props.aspectRatio} near={0.1} far={500}>
-                    {this.props.children}
-                </Camera>
-        
+    const getYaw = (world: World) => {
+        return model.selector(world).yaw
     }
-    
-}
+
+    const getPitch = (world: World) => {
+        return model.selector(world).pitch
+    }
+
+        return {
+            getPosition,
+            getYaw,
+            getPitch,
+        }
+    }
 
