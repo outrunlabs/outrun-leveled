@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { Game, RenderEventContext, World, GameModel } from "outrun-game-core"
-import { Vector3, Components } from "outrun-renderer-3d"
+import { Vector3, Components, Mesh } from "outrun-renderer-3d"
 import { PhysicsWorld } from "outrun-physics-3d"
 
 export type Primitive = {
@@ -9,17 +9,28 @@ export type Primitive = {
   position: Vector3
 }
 
+
+export interface PrefabInfo {
+    meshFiles: string[]
+    position: Vector3
+}
+
 export interface EditorState {
-  primitives: Primitive[]
+  primitives: Primitive[] 
+  prefabs: PrefabInfo[]
 }
 
 export const DefaultEditorState: EditorState = {
   primitives: [],
+  prefabs: [],
 }
 
 export type EditorActions = {
   type: "ADD_BOX"
   position: Vector3
+} | {
+    type: "ADD_PREFAB",
+    position: Vector3
 }
 
 export const reducer = (
@@ -35,6 +46,14 @@ export const reducer = (
           { type: "box", position: action.position },
         ],
       }
+    case "ADD_PREFAB":
+          return {
+            ...state,
+              prefabs: [
+                ...state.prefabs,
+                { meshFiles: ["E:/outrun/outrun-test-level/meshes/barrel01.obj"], position: action.position}
+              ]
+          }
   }
   return state
 }
@@ -55,8 +74,8 @@ export const activate = (game: Game) => {
 // Let's us always access them from the world, with less awkwardness
 
 export namespace Selectors {
-  export const getPrimitives = (world: World): Primitive[] => {
-    return model.selector(world).primitives || []
+  export const getEditorState = (world: World): EditorState => {
+    return model.selector(world) || DefaultEditorState
   }
 }
 
@@ -65,13 +84,13 @@ export namespace Selectors {
 // connected = connectToModel("model", mapModelToProps, <elem />)
 // Store model as name
 
-export interface EditorViewProps {
+export interface EditorViewProps extends EditorState {
   primitives: Primitive[]
 }
 
 export class EditorView extends React.Component<EditorViewProps, {}> {
   public render(): JSX.Element {
-    const primitives = this.props.primitives
+      const { prefabs, primitives } = this.props
     if (!primitives) {
       return null
     }
@@ -79,6 +98,14 @@ export class EditorView extends React.Component<EditorViewProps, {}> {
     const boxes = primitives.map((b, idx) => {
       return <Components.Box key={idx.toString()} position={b.position} />
     })
-    return <Components.Group>{boxes}</Components.Group>
+
+    const prefabView = prefabs.map((prefab, idx) => {
+        return <Components.Transform transform={[{translate: prefab.position}]}>
+            <Components.Material material={{type: "normal"}}>
+            <Components.Mesh mesh={Mesh.fromFile(prefab.meshFiles[0]).then(mesh => mesh[0])} />
+            </Components.Material>
+            </Components.Transform>
+    })
+    return <Components.Group>{boxes}{prefabView}</Components.Group>
   }
 }

@@ -85,7 +85,7 @@ export class EditorCamera extends React.Component<EditorCameraProps, {}> {
                 const cameraPos = ffm.getPosition(world)
                 const result = physics.rayCast(cameraPos, Vector3.multiplyScalar(testCursorDir, 200))
                 game.dispatch({
-                    type: "ADD_BOX",
+                    type: "ADD_PREFAB",
                     position: result.point,
                 })
             }
@@ -120,7 +120,7 @@ export const render = (rec: RenderEventContext) => {
 
     const result = physics.rayCast(cameraPos, Vector3.multiplyScalar(testCursorDir, 200))
 
-    const editorState = EditorMiddleware.Selectors.getPrimitives(rec.nextWorld)
+    const editorState = EditorMiddleware.Selectors.getEditorState(rec.nextWorld)
 
     return <div>
         <Component3d.Renderer width={800} height={600} >
@@ -129,7 +129,7 @@ export const render = (rec: RenderEventContext) => {
                     <Component3d.Grid />
                     <Component3d.Box position={Vector3.create(0, 0, 0)} />
                     <Component3d.Box position={Vector3.create(Math.floor(result.point.x + 0.5), Math.floor(result.point.y + 0.5), Math.floor(result.point.z + 0.5))} />
-               <EditorMiddleware.EditorView primitives={editorState} /> 
+               <EditorMiddleware.EditorView {...editorState} /> 
             </EditorCamera>
           </Component3d.Renderer>
         </div>
