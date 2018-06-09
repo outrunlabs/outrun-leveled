@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { Game, RenderEventContext, World, GameModel } from "outrun-game-core"
+import { Game, RenderEventContext, World, GameModel, connectToWorld } from "outrun-game-core"
 import { Vector3, Components, Mesh } from "outrun-renderer-3d"
 import { PhysicsWorld } from "outrun-physics-3d"
 
@@ -64,10 +64,8 @@ export const reducer = (
 
 export const EditorContext = React.createContext(DefaultEditorState)
 
-let model: GameModel<EditorState, EditorActions>
-
 export const activate = (game: Game) => {
-  model = game.createModel("editorState", DefaultEditorState, reducer)
+  const model = game.createModel("editorState", DefaultEditorState, reducer)
 }
 
 // bindSelectors(selectors, modelName)
@@ -75,7 +73,7 @@ export const activate = (game: Game) => {
 
 export namespace Selectors {
   export const getEditorState = (world: World): EditorState => {
-    return model.selector(world) || DefaultEditorState
+    return World.getModelState<EditorState>(world, "editorState") || DefaultEditorState
   }
 }
 
@@ -88,7 +86,7 @@ export interface EditorViewProps extends EditorState {
   primitives: Primitive[]
 }
 
-export class EditorView extends React.Component<EditorViewProps, {}> {
+export class EditorView extends React.PureComponent<EditorViewProps, {}> {
   public render(): JSX.Element {
       const { prefabs, primitives } = this.props
     if (!primitives) {
@@ -109,3 +107,6 @@ export class EditorView extends React.Component<EditorViewProps, {}> {
     return <Components.Group>{boxes}{prefabView}</Components.Group>
   }
 }
+
+export const ConnectedEditor = connectToWorld(world => Selectors.getEditorState(world))(EditorView)
+

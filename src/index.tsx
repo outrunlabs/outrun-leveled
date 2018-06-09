@@ -116,11 +116,7 @@ export const render = (rec: RenderEventContext) => {
 
     const cameraPos = ffm.getPosition(rec.nextWorld)
 
-
-
     const result = physics.rayCast(cameraPos, Vector3.multiplyScalar(testCursorDir, 200))
-
-    const editorState = EditorMiddleware.Selectors.getEditorState(rec.nextWorld)
 
     return <div>
         <Component3d.Renderer width={800} height={600} >
@@ -129,7 +125,7 @@ export const render = (rec: RenderEventContext) => {
                     <Component3d.Grid />
                     <Component3d.Box position={Vector3.create(0, 0, 0)} />
                     <Component3d.Box position={Vector3.create(Math.floor(result.point.x + 0.5), Math.floor(result.point.y + 0.5), Math.floor(result.point.z + 0.5))} />
-               <EditorMiddleware.EditorView {...editorState} /> 
+               <EditorMiddleware.ConnectedEditor />
             </EditorCamera>
           </Component3d.Renderer>
         </div>
